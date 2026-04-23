@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Blobs } from '@/components/decorative/blobs';
+import { Logo } from '@/components/brand/logo';
 
 /**
  * Landing page = the Invisible Load entry point. For v1, the only live
@@ -10,6 +11,7 @@ import { Blobs } from '@/components/decorative/blobs';
 export default function LandingPage() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-maple-green via-emerald-400 to-maple-teal">
+      <Logo invert size={28} />
       <Blobs />
       <div className="relative z-10 mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-12 text-center text-maple-dark">
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-maple-dark/70">

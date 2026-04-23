@@ -8,6 +8,7 @@ import { isComplete } from '@/lib/calculators/engine';
 import { QuestionCard } from '@/components/quiz/question-card';
 import { ProgressBar } from '@/components/quiz/progress-bar';
 import { QuizNav } from '@/components/quiz/nav';
+import { Logo } from '@/components/brand/logo';
 import { analytics } from '@/lib/analytics';
 
 /**
@@ -58,7 +59,8 @@ export function QuizClient() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-12">
+    <main className="relative mx-auto flex min-h-screen max-w-lg flex-col px-6 pt-20 pb-12 md:pt-24">
+      <Logo />
       <header className="mb-8 space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-maple-teal">
           {config.title}

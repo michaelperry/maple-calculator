@@ -7,6 +7,7 @@ import { ArchetypeBlock } from '@/components/result/archetype-block';
 import { MapleConnection } from '@/components/result/maple-connection';
 import { EmailCapture } from '@/components/result/email-capture';
 import { ShareButtons } from '@/components/result/share-buttons';
+import { Logo } from '@/components/brand/logo';
 import { ResultsTracker } from './results-tracker';
 
 interface ResultPageProps {
@@ -27,7 +28,8 @@ export default async function MentalLoadResultPage({ searchParams }: ResultPageP
   const sharePath = `/${mentalLoad.slug}/result?r=${r}`;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-12">
+    <main className="relative mx-auto flex min-h-screen max-w-lg flex-col px-6 pt-20 pb-12 md:pt-24">
+      <Logo />
       <ResultsTracker
         slug={result.slug}
         primary={result.primary}
@@ -108,7 +110,8 @@ function CategoryBreakdown({ breakdown }: { breakdown: Record<string, number> })
 
 function InvalidResult() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-12 text-center">
+    <main className="relative mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center px-6 py-12 text-center">
+      <Logo />
       <h1 className="font-display text-3xl font-bold text-maple-dark">
         We couldn&rsquo;t read that result.
       </h1>
