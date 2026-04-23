@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { mentalLoad } from '@/lib/calculators/mental-load';
 import { encodeAnswers } from '@/lib/calculators/encode';
@@ -10,29 +10,29 @@ import { ProgressBar } from '@/components/quiz/progress-bar';
 import { QuizNav } from '@/components/quiz/nav';
 import { analytics } from '@/lib/analytics';
 
-type Stage = 'intro' | 'questions';
-
+/**
+ * Quiz drops users straight into question 1 — the landing page (or future hub)
+ * already does the framing, so a second intro screen is just an extra tap.
+ * `quiz_started` fires on mount; `quiz_completed` fires on submit.
+ */
 export function QuizClient() {
   const config = mentalLoad;
   const router = useRouter();
-  const [stage, setStage] = useState<Stage>('intro');
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const startedAt = useRef<number | null>(null);
 
   useEffect(() => {
     analytics.quizPageViewed({ slug: config.slug });
+    if (startedAt.current === null) {
+      startedAt.current = Date.now();
+      analytics.quizStarted(config.slug);
+    }
   }, [config.slug]);
 
   const total = config.questions.length;
   const question = config.questions[index];
   const selected = answers[question?.id ?? ''];
-
-  const begin = () => {
-    startedAt.current = Date.now();
-    analytics.quizStarted(config.slug);
-    setStage('questions');
-  };
 
   const handleAnswer = (value: string) => {
     setAnswers((prev) => ({ ...prev, [question.id]: value }));
@@ -57,41 +57,14 @@ export function QuizClient() {
     router.push(`/${config.slug}/result?r=${encoded}`);
   };
 
-  const headerCopy = useMemo(() => {
-    if (stage === 'intro') return null;
-    return <ProgressBar current={index + 1} total={total} />;
-  }, [stage, index, total]);
-
-  if (stage === 'intro') {
-    return (
-      <main className="mx-auto flex min-h-screen max-w-lg flex-col justify-center px-6 py-12">
-        <div className="space-y-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-maple-teal">
-            The Invisible Load
-          </p>
-          <h1 className="font-display text-4xl font-bold leading-tight text-maple-dark md:text-5xl">
-            {config.title}
-          </h1>
-          <p className="text-lg text-maple-dark/70">{config.intro}</p>
-          <button
-            type="button"
-            onClick={begin}
-            className="rounded-full bg-maple-dark px-10 py-4 font-body text-lg font-semibold text-maple-cream shadow-md transition-transform hover:scale-[1.02]"
-          >
-            Start the {config.estimatedSeconds}-second quiz
-          </button>
-          <p className="text-sm text-maple-dark/50">
-            We&rsquo;ll ask {config.questions.length} questions about the invisible work of
-            running your family. No wrong answers.
-          </p>
-        </div>
-      </main>
-    );
-  }
-
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col px-6 py-12">
-      <div className="mb-10">{headerCopy}</div>
+      <header className="mb-8 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-maple-teal">
+          {config.title}
+        </p>
+        <ProgressBar current={index + 1} total={total} />
+      </header>
       <div className="flex-1">
         {question && (
           <QuestionCard
