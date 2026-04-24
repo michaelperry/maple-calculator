@@ -21,6 +21,7 @@ export function QuizClient() {
   const router = useRouter();
   const [index, setIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
   const startedAt = useRef<number | null>(null);
 
   useEffect(() => {
@@ -46,14 +47,38 @@ export function QuizClient() {
   };
 
   const goBack = () => setIndex((i) => Math.max(0, i - 1));
-  const goNext = () => {
+  const goNext = async () => {
     if (index < total - 1) {
       setIndex((i) => i + 1);
       return;
     }
-    if (!isComplete(config, answers)) return;
+    if (!isComplete(config, answers) || submitting) return;
+
+    setSubmitting(true);
     const elapsed = startedAt.current ? Date.now() - startedAt.current : 0;
     analytics.quizCompleted({ slug: config.slug, total_time_ms: elapsed });
+
+    // Ask the server for the canonical URL. When Upstash is configured we get
+    // back `/r/<id>` (short, pretty); otherwise a base64 `?r=...` URL. The
+    // fallback is identical to the old client-only behavior, so nothing
+    // breaks if the endpoint is down.
+    try {
+      const res = await fetch('/api/r', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: config.slug, answers }),
+      });
+      if (res.ok) {
+        const json = (await res.json()) as { ok: boolean; url?: string };
+        if (json.ok && json.url) {
+          router.push(json.url);
+          return;
+        }
+      }
+    } catch {
+      // Fall through to client-side fallback.
+    }
+
     const encoded = encodeAnswers(answers);
     router.push(`/${config.slug}/result?r=${encoded}`);
   };
@@ -80,8 +105,9 @@ export function QuizClient() {
       <div className="mt-10">
         <QuizNav
           canGoBack={index > 0}
-          canGoNext={Boolean(selected)}
+          canGoNext={Boolean(selected) && !submitting}
           isLast={index === total - 1}
+          submitting={submitting}
           onBack={goBack}
           onNext={goNext}
         />

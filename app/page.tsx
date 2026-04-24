@@ -1,14 +1,29 @@
 import Link from 'next/link';
 import { Blobs } from '@/components/decorative/blobs';
 import { Logo } from '@/components/brand/logo';
+import { getCount } from '@/lib/counter';
 
 /**
- * Landing page = the Invisible Load entry point. For v1, the only live
+ * Landing page = the Invisible Load entry point. For v1 the only live
  * calculator is Mental Load, so the primary CTA goes straight there.
- * As more calculators ship, this becomes the soft directory described
+ * As more calculators ship this becomes the soft directory described
  * in the strategy brief (Stage 1 of the hub rollout).
+ *
+ * Dynamic rendering on each request (no `use cache`) — the social-proof
+ * counter is the page's one live number and we want it fresh. Vercel
+ * still edge-caches the rest of the shell.
  */
-export default function LandingPage() {
+export const dynamic = 'force-dynamic';
+
+function formatCount(n: number): string {
+  if (n >= 10_000) return `${Math.round(n / 1000).toLocaleString()}k+`;
+  if (n >= 1000) return `${(n / 1000).toFixed(1)}k+`;
+  return n.toLocaleString();
+}
+
+export default async function LandingPage() {
+  const count = await getCount('mental-load');
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-maple-green via-emerald-400 to-maple-teal">
       <Logo invert size={28} />
@@ -32,7 +47,17 @@ export default function LandingPage() {
           Take the Mental Load Calculator
           <span aria-hidden>→</span>
         </Link>
-        <p className="mt-3 text-sm text-maple-dark/70">9 questions. About 90 seconds.</p>
+
+        {/*
+          Social-proof counter — a first-class virality mechanic, not a stat badge.
+          Reads from Upstash Redis when configured, falls back to a baseline while
+          the integration is being provisioned. Deliberately understated visually
+          so it reinforces the CTA rather than competing with it.
+        */}
+        <p className="mt-4 font-body text-sm text-maple-dark/75">
+          <span className="font-semibold text-maple-dark">{formatCount(count)}</span>{' '}
+          moms have taken this. 9 questions. About 90 seconds.
+        </p>
 
         <div className="mt-16 w-full rounded-2xl bg-white/40 p-6 text-left backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-maple-dark/70">
