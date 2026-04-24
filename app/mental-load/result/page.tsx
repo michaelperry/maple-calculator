@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { mentalLoad } from '@/lib/calculators/mental-load';
 import { buildResult, isComplete } from '@/lib/calculators/engine';
@@ -12,6 +13,44 @@ import { ResultsTracker } from './results-tracker';
 
 interface ResultPageProps {
   searchParams: Promise<{ r?: string }>;
+}
+
+/**
+ * Per-result OG metadata. The `?r=...` answer string is what makes each
+ * shared link unique, so each share gets its own preview image with the
+ * actual number and archetype baked in.
+ *
+ * `metadataBase` from app/layout.tsx provides the absolute origin used
+ * when resolving the relative `/api/og?r=...` URL — Next.js sets this
+ * automatically from VERCEL_URL on Vercel deployments.
+ */
+export async function generateMetadata({ searchParams }: ResultPageProps): Promise<Metadata> {
+  const { r } = await searchParams;
+  if (!r) return {};
+  const answers = decodeAnswers(r);
+  if (!answers || !isComplete(mentalLoad, answers)) return {};
+
+  const result = buildResult(mentalLoad, answers);
+  const ogUrl = `/api/og?r=${r}&slug=${mentalLoad.slug}`;
+  const title = `I carry ${result.primary}% of my family's mental load — Maple`;
+  const description = `${result.archetype.name}. Take the 90-second Mental Load Calculator and see your number.`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: ogUrl, width: 1200, height: 630, alt: title }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogUrl],
+    },
+  };
 }
 
 export default async function MentalLoadResultPage({ searchParams }: ResultPageProps) {

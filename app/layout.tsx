@@ -14,8 +14,24 @@ const fraunces = Fraunces({
   display: 'swap',
 });
 
+// Resolve the canonical origin for absolute URLs in metadata (used by
+// open-graph image references). Order:
+//   1. NEXT_PUBLIC_SITE_URL — explicit override (set in Vercel env when wiring a custom domain)
+//   2. VERCEL_PROJECT_PRODUCTION_URL — the project's prod URL on Vercel (always set on prod builds)
+//   3. VERCEL_URL — the current deployment URL (preview deploys)
+//   4. localhost — dev fallback
+const metadataBase = new URL(
+  process.env.NEXT_PUBLIC_SITE_URL
+    ? process.env.NEXT_PUBLIC_SITE_URL
+    : process.env.VERCEL_ENV === 'production' && process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : 'http://localhost:3000',
+);
+
 export const metadata: Metadata = {
-  metadataBase: new URL('https://growmaple.com'),
+  metadataBase,
   title: 'The Invisible Load | Maple',
   description:
     "Calculators that put a number on what moms are carrying. Start with the Mental Load Calculator — 90 seconds.",
