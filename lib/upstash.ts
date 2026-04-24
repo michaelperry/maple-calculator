@@ -3,20 +3,23 @@ import { Redis } from '@upstash/redis';
 /**
  * Shared Upstash Redis client.
  *
- * Env-gated: when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are
- * unset, every caller sees `null` and is expected to provide a graceful
- * fallback (baseline counter, base64 share URLs, etc.). When the user
- * provisions Upstash Redis from the Vercel Marketplace, these env vars
- * are auto-injected on the next deploy and all Redis-backed features
- * light up with zero code changes.
+ * Env-gated: when the Upstash/KV env vars are unset, every caller sees `null`
+ * and provides a graceful fallback (baseline counter, base64 share URLs).
+ *
+ * We accept two naming conventions because the Vercel Marketplace integration
+ * currently provisions Upstash Redis under the legacy `@vercel/kv`-era names
+ * (KV_REST_API_URL / KV_REST_API_TOKEN). Both forms map to the same REST
+ * endpoint, so we pick whichever is set.
  */
 
 let cached: Redis | null | undefined;
 
 export function getRedis(): Redis | null {
   if (cached !== undefined) return cached;
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
   if (!url || !token) {
     cached = null;
     return null;
