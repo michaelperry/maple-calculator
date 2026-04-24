@@ -10,6 +10,7 @@ import { ProgressBar } from '@/components/quiz/progress-bar';
 import { QuizNav } from '@/components/quiz/nav';
 import { Logo } from '@/components/brand/logo';
 import { analytics } from '@/lib/analytics';
+import { withBasePath } from '@/lib/base-path';
 
 /**
  * Quiz drops users straight into question 1 — the landing page (or future hub)
@@ -63,7 +64,7 @@ export function QuizClient() {
     // fallback is identical to the old client-only behavior, so nothing
     // breaks if the endpoint is down.
     try {
-      const res = await fetch('/api/r', {
+      const res = await fetch(withBasePath('/api/r'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: config.slug, answers }),

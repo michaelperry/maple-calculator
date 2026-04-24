@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og';
 import { mentalLoad } from '@/lib/calculators/mental-load';
 import { buildResult, isComplete } from '@/lib/calculators/engine';
 import { decodeAnswers } from '@/lib/calculators/encode';
+import { withBasePath } from '@/lib/base-path';
 
 /**
  * Dynamic Open Graph image for shared result links.
@@ -31,7 +32,9 @@ let fraunces700: ArrayBuffer | null = null;
 async function getLogoDataUri(origin: string): Promise<string | null> {
   if (logoDataUri) return logoDataUri;
   try {
-    const res = await fetch(`${origin}/maple-logo.png`);
+    // basePath prefix: the logo lives at /<basePath>/maple-logo.png on disk
+    // once Next.js mounts the public folder under basePath.
+    const res = await fetch(`${origin}${withBasePath('/maple-logo.png')}`);
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer()).toString('base64');
     logoDataUri = `data:image/png;base64,${buf}`;

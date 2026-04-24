@@ -1,6 +1,7 @@
 'use client';
 
 import { analytics } from '@/lib/analytics';
+import { BASE_PATH } from '@/lib/base-path';
 
 interface SendToPartnerProps {
   slug: string;
@@ -25,7 +26,15 @@ export function SendToPartner({ slug, primary, shareUrl }: SendToPartnerProps) {
   const resolveAbsolute = () => {
     if (typeof window === 'undefined') return shareUrl;
     try {
-      return new URL(shareUrl, window.location.origin).toString();
+      // App-relative paths need the basePath so the shared link works through
+      // the Netlify proxy at www.growmaple.com/mental-load-calculator.
+      const normalized =
+        shareUrl.startsWith('http://') || shareUrl.startsWith('https://')
+          ? shareUrl
+          : shareUrl.startsWith(BASE_PATH)
+            ? shareUrl
+            : `${BASE_PATH}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
+      return new URL(normalized, window.location.origin).toString();
     } catch {
       return shareUrl;
     }

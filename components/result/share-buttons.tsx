@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { analytics } from '@/lib/analytics';
+import { BASE_PATH } from '@/lib/base-path';
 
 interface ShareButtonsProps {
   slug: string;
@@ -36,7 +37,17 @@ export function ShareButtons({ slug, primary, shareUrl }: ShareButtonsProps) {
   const resolveAbsolute = () => {
     if (typeof window === 'undefined') return shareUrl;
     try {
-      return new URL(shareUrl, window.location.origin).toString();
+      // If shareUrl is already absolute (http(s)://…), URL() resolves to it and
+      // the basePath prefix is ignored. Otherwise it's an app-relative path
+      // like /r/abc — we prepend BASE_PATH so the shared link works through
+      // the Netlify proxy at www.growmaple.com/mental-load-calculator/…
+      const normalized =
+        shareUrl.startsWith('http://') || shareUrl.startsWith('https://')
+          ? shareUrl
+          : shareUrl.startsWith(BASE_PATH)
+            ? shareUrl
+            : `${BASE_PATH}${shareUrl.startsWith('/') ? '' : '/'}${shareUrl}`;
+      return new URL(normalized, window.location.origin).toString();
     } catch {
       return shareUrl;
     }

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { analytics } from '@/lib/analytics';
+import { withBasePath } from '@/lib/base-path';
 
 interface EmailCaptureProps {
   slug: string;
@@ -23,7 +24,7 @@ export function EmailCapture({ slug, archetype, primary }: EmailCaptureProps) {
     setStatus('submitting');
     setErrorMsg(null);
     try {
-      const res = await fetch('/api/subscribe', {
+      const res = await fetch(withBasePath('/api/subscribe'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
